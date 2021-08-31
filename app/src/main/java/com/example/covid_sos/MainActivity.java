@@ -2,6 +2,7 @@ package com.example.covid_sos;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,8 +27,6 @@ public class MainActivity extends AppCompatActivity {
 
     /* 카카오 로그인 class 멤버 생성. */
     private View loginButton;
-    private TextView nickname;
-    private ImageView profileImage;
 
 
     @Override
@@ -37,10 +36,10 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         loginButton = findViewById(R.id.login);
-        nickname = findViewById(R.id.nickname);
-        profileImage = findViewById(R.id.profile);
 
-        /* 카카오톡 설치여부 확인 callback 객체*/
+
+
+        /* 카카오톡 설치여부 확인 callback 함수*/
         Function2<OAuthToken, Throwable, Unit> callback = new Function2<OAuthToken, Throwable, Unit>()  {
             @Override
             public Unit invoke(OAuthToken oAuthToken, Throwable throwable) {
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        /*로그인 버튼 눌렀을 때 실행되도록  */
+        /*로그인 버튼 클릭 함수  */
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -78,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
     private void updateKakaoLoginUi() {
         /*사용자(me)의 API 로그인 정보를 가져온다.*/
         UserApiClient.getInstance().me(new Function2<User, Throwable, Unit>() {
@@ -88,28 +86,35 @@ public class MainActivity extends AppCompatActivity {
                 /*이부분이 카카오 API 가이드 코드 참고 */
                 if (user != null) {
                     /*로그인된 상태일 경우*/
+
+                    /*loginsucces 로 넘겨줄 사용자 정보 intent*/
+                    Intent intent = new Intent(MainActivity.this, loginsuccess.class);
+
+                    /*intent객체에 onSuccess의 result를 넣어준다(putExtra).*/
+
+                    /*     ★ App을 위해 필요한 로그인된 사용자의 정보를 여기에 써둬야함 !!★      */
+                    intent.putExtra("name",user.getKakaoAccount().getProfile().getNickname());
+                    intent.putExtra("profileImg",user.getKakaoAccount().getProfile().getThumbnailImageUrl());
+
+
+                    /*다음 Activity에 intent를 넘겨준다.(loginsuccess 에서는 넘겨받을 코드를 작성해야함)*/
+                    startActivity(intent);
+
+
                     /*얻을 수 있는 정보*/
                     Log.i(TAG, "invoke id="+user.getId());
                     Log.i(TAG, "invoke nickname="+user.getKakaoAccount().getProfile().getNickname());
                     Log.i(TAG, "invoke gender="+user.getKakaoAccount().getGender());
                     Log.i(TAG, "invoke age="+user.getKakaoAccount().getAgeRange());
 
-                    /*버튼에 정보 set*/
 
-                    nickname.setText(user.getKakaoAccount().getProfile().getNickname());
-                    /*카카오 프로필 이미지를 url로 가져와서 화면에 보여주는 Glide 오픈소스 추가가 우선임*/
-                    Glide.with(profileImage).load(user.getKakaoAccount().getProfile().getThumbnailImageUrl()).circleCrop().into(profileImage);
-                    /* 로그인 버튼 안보임*/
-                    loginButton.setVisibility(View.GONE);
 
                 } else {
                     /*로그인 X 경우*/
                     /*닉네임 등 로그인된 정보 안보임*/
-                    nickname.setText(null);
-                    profileImage.setImageBitmap(null);
+
                     Log.w(TAG, "Invoke"+throwable.getLocalizedMessage());
-                    /*로그인 버튼 보임*/
-                    loginButton.setVisibility(View.VISIBLE);
+
                 }
                 if (throwable != null) {
                     Log.w(TAG, "Invoke"+throwable.getLocalizedMessage());
